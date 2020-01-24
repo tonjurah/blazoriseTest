@@ -1,0 +1,123 @@
+﻿@page "/"
+
+@using Blazorise.DataGrid
+@using System.Reflection
+
+
+<DataGrid TItem="@myModel"
+          Data="@data"
+          Editable="true"
+          EditMode="DataGridEditMode.Inline"
+          ShowPager="@true"
+          UseInternalEditing="false"
+          @bind-SelectedRow="@selectedRow"
+          RowInserted="@OnRowInserted"
+          RowUpdated="@OnRowUpdated"
+          RowRemoved="@OnRowRemoved"
+          IsHoverable="true">
+
+    <DataGridCommandColumn TItem="myModel" />
+    @{
+        var lst = typeof(myModel).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var prop in lst)
+        {
+            if (IsNumericType(prop.PropertyType))
+            {
+
+                <DataGridNumericColumn TItem="@myModel" Field="@prop.Name" Caption="@prop.Name" Editable="true">
+                    @*<DisplayTemplate>
+                            @($"{prop.GetValue((context as CopShipSp))}")
+                        </DisplayTemplate>*@
+                    <EditTemplate>
+                        <NumericEdit @bind-Value="@(((CellEditContext)context).CellValue)" />
+                    </EditTemplate>
+                </DataGridNumericColumn>
+            }
+            else
+            {
+                <DataGridColumn TItem="@myModel" Field="@prop.Name" Caption="@prop.Name" Editable="true">
+                    @*<DisplayTemplate>
+                        @($"{prop?.GetValue((context as myModel))}")
+                    </DisplayTemplate>*@
+                    <EditTemplate>
+                        <TextEdit Text="@(((CellEditContext)context).CellValue.ToString())" TextChanged="@(v => ((CellEditContext)context).CellValue = v)" />
+
+                    </EditTemplate>
+                </DataGridColumn>
+            }
+        }
+    }
+</DataGrid>
+
+
+@code{
+
+    protected myModel selectedRow;
+
+    protected List<myModel> data = new List<myModel>();
+
+    public class myModel
+    {
+        public string myName { get; set; }
+        public int myInt { get; set; }
+    }
+
+    protected override void OnParametersSet()
+    {
+        data.Add(new myModel() { myName = "A", myInt = 1 });
+        data.Add(new myModel() { myName = "B", myInt = 2 });
+        data.Add(new myModel() { myName = "C", myInt = 3 });
+    }
+
+    protected void OnRowInserted()
+    {
+
+    }
+
+    protected void OnRowUpdated(SavedRowItem<myModel, Dictionary<string, object>> o)
+    {
+
+    }
+
+    protected void OnRowRemoved()
+    {
+
+    }
+
+
+    private static HashSet<Type> NumericTypes = new HashSet<Type>
+{
+        typeof(int),
+        typeof(uint),
+        typeof(double),
+        typeof(decimal),
+        typeof(Byte),
+        typeof(SByte),
+        typeof(UInt16),
+        typeof(UInt32),
+        typeof(UInt64),
+        typeof(UInt16),
+        typeof(UInt32),
+        typeof(UInt64),
+        typeof(Single),
+        typeof(int?),
+        typeof(uint?),
+        typeof(double?),
+        typeof(decimal?),
+        typeof(Byte?),
+        typeof(SByte?),
+        typeof(UInt16?),
+        typeof(UInt32?),
+        typeof(UInt64?),
+        typeof(UInt16?),
+        typeof(UInt32?),
+        typeof(UInt64?),
+        typeof(Single?)
+    };
+
+    internal static bool IsNumericType(Type type)
+    {
+        return NumericTypes.Contains(type) ||
+               NumericTypes.Contains(Nullable.GetUnderlyingType(type));
+    }
+}
